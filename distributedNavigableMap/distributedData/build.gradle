@@ -1,0 +1,38 @@
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'maven'
+apply plugin: 'idea'
+apply from: '../repos.gradle'
+apply from: '../dependencies.gradle'
+//apply from: '../deploy.gradle'
+
+archivesBaseName = 'distributedData'
+group = 'kic.engine'
+version = '302-SNAPSHOT'
+mainClassName = ""
+
+buildDir = 'target'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+dependencies {
+	compile deps.log4j
+	compile deps.slf4j
+	compile deps.hazelcast
+	compile deps.joda
+	compile deps.mapdb
+
+	testCompile deps.junit
+	testCompile 'mysql:mysql-connector-java:5.1.6'
+}
+
+// workaround for testing classes
+task copyTestResources(type: Copy) {
+	from "${projectDir}/src/test/resources"
+	into "${buildDir}/classes/test"
+}
+
+test.dependsOn copyTestResources
+compileJava.dependsOn copyTestResources

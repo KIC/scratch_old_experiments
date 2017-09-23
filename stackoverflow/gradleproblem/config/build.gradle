@@ -1,0 +1,8 @@
+plugins {
+  id "com.bmuschko.nexus" version "2.3"
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply from: '../repos.gradle'
+

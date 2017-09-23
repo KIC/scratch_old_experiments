@@ -1,0 +1,3 @@
+include ':config'
+project(':config').projectDir = new File(settingsDir, '../config')
+

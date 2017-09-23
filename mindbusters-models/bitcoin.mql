@@ -1,0 +1,37 @@
+DEFINE
+  itemids := ['54b681ff439a31c637e12348'];
+  sourceid := '54b7c8c00cf2a8f71359e5ce';
+  indicatorid := '54b68f4b439a31c637e12350';
+MAP
+    cassandra USING (indicatorid, sourceid, itemids) AS bitcoin
+  WHERE KEY RANGE BETWEEN '2013-11-01' AND '2016-12-31';
+CALC
+  sot := Sornette(JOINKEY, bitcoin, null, 420);
+  bb := BBANDS(bitcoin, 50, 2, 2, 'Sma');
+PLOT
+  ON PANEL 'first' RATIO 32/18 ROW 1 COLUMN 1
+    Line(default / bb.outRealLowerBand)
+      WITH COLOR '#f1e444'
+      USING
+          ABSCISSA  LABEL 'Time'
+          ORDINATE  LABEL 'Price'
+      LABEL 'BBands Lower (50,2,2)';
+    Line(default / bb.outRealUpperBand)
+      WITH COLOR '#f1e444'
+      USING
+          ABSCISSA  LABEL 'Time'
+          ORDINATE  LABEL 'Price'
+      LABEL 'BBands Upper (50,2,2)';
+
+    Line(default / bitcoin)
+      WITH COLOR '#2576b4'
+      USING
+          ABSCISSA  LABEL 'Time'
+          ORDINATE  LABEL 'Price'
+      LABEL 'Bitcoin';
+    Line(sot.date / sot.lppl)
+      WITH COLOR '#62ac37'
+      USING
+          ABSCISSA  LABEL 'Time'
+          ORDINATE  LABEL 'Price'
+      LABEL 'LPPL - Change of Regime at: ', sot.predictedTimeOfCrash;

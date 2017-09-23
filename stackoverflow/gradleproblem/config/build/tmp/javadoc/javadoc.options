@@ -1,0 +1,6 @@
+-classpath '/tmp/foo/config/build/classes/main:/tmp/foo/config/build/resources/main'
+-d '/tmp/foo/config/build/docs/javadoc'
+-doctitle 'config API'
+-quiet 
+-windowtitle 'config API'
+'/tmp/foo/config/src/main/java/Hello.java'

@@ -1,0 +1,20 @@
+// config repositories
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+// make grade build more maven like
+configurations {
+    providedCompile
+    testCompile.extendsFrom provided
+    compile.transitive = true
+}
+
+
+// to stop gradle from swallowing stdout and stderr
+test {
+    testLogging.showStandardStreams = true
+}
+
+

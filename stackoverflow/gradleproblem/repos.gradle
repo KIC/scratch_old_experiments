@@ -1,0 +1,20 @@
+repositories {
+        mavenLocal()
+        mavenCentral()
+	maven {
+          url "http://localhost:8081/nexus/"
+    	}
+}
+
+configurations {
+    providedCompile
+    testCompile.extendsFrom provided
+    compile.transitive = true
+}
+
+// https://github.com/bmuschko/gradle-nexus-plugin
+nexus {
+     sign = true
+     repositoryUrl = 'http://localhost:8081/nexus/content/repositories/releases/'
+     snapshotRepositoryUrl = 'http://localhost:8081/nexus/content/repositories/snapshots/'
+}

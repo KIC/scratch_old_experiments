@@ -1,0 +1,58 @@
+DEFINE
+  qqq := ['53ccb4654ab0d3560e8c9950'];
+  spy := ['53ccb4654ab0d3560e8c98b3'];
+  sourceid := '53ccba414ab0d3560e8d0563';
+  closeid := '53ccb3954ab0d3750d8b4a9d';
+MAP
+    cassandra USING (closeid, sourceid, qqq) AS nasdaq,
+    cassandra USING (closeid, sourceid, spy) AS sp500
+  //WHERE KEY RANGE BETWEEN CURRENT_DATE - 2 YEAR AND CURRENT_DATE + 1 DAYS;
+  WHERE KEY RANGE BETWEEN '1999-01-01' AND '2003-12-31';
+CALC
+  pairs_ratio := nasdaq / sp500;
+  sma_ratio := Sma(pairs_ratio, 20);
+  delta := pairs_ratio - sma_ratio;
+  sma_delta := Sma(delta, 20);
+  stddev := STDDEV(delta, 20, 1);
+  signal := (delta - sma_delta) / stddev;
+  move := nasdaq / nasdaq[-1, NN] -1;
+
+  // Long events
+  openLong := (signal <= -1.5 AND move <= -0.02)[-1, NN] = true;
+  closeLong := (signal >= -0.5)[-1, NN] = true;
+
+  // Short events
+  openShort := (signal >= 1.5 AND move >= 0.02)[-1, NN] = true;
+  closeShort := (signal <= 0.5)[-1, NN] = true;
+TRADE nasdaq, nasdaq
+  GO_LONG WHEN openLong CLOSE_LONG WHEN closeLong
+  GO_SHORT WHEN openShort CLOSE_SHORT WHEN closeShort;
+PLOT
+  ON PANEL 'first' RATIO 32/18 ROW 1 COLUMN 1
+      Line(default / nasdaq)
+        WITH COLOR '#2576b4'
+        USING
+            ABSCISSA  LABEL 'Time'
+            ORDINATE  LABEL 'Price Nasdaq'
+        LABEL 'Nasdaq';
+      Line(default / sp500)
+        WITH COLOR '#63ad36'
+        USING
+            ABSCISSA  LABEL 'Time'
+            ORDINATE  LABEL 'Price S&P 500'
+        LABEL 'S&P 500';
+
+  ON PANEL 'second' RATIO 32/9 ROW 2 COLUMN 1
+      Line(default / trade.longPnlPrct)
+        WITH COLOR '#63ad36'
+        USING
+            ABSCISSA  LABEL 'Time'
+            ORDINATE  LABEL '%'
+        LABEL 'Pnl Long %';
+      Line(default / trade.shortPnlPrct)
+        WITH COLOR '#2576b4'
+        USING
+            ABSCISSA  LABEL 'Time'
+            ORDINATE  LABEL '%'
+        LABEL 'Pnl Short %';
+

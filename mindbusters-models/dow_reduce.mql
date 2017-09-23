@@ -1,0 +1,77 @@
+DEFINE
+  dowids := ['53ccb4654ab0d3560e8c98d2'];
+  itemids := ['53ccb4654ab0d3560e8c94ce',
+              '53ccb4654ab0d3560e8c9929',
+              '53ccb4654ab0d3560e8c9941',
+              '53ccb4654ab0d3560e8c9940',
+              '53ccb4654ab0d3560e8c94c8',
+              '53ccb4654ab0d3560e8c94d1',
+              '53ccb4654ab0d3560e8c94cf',
+              '53ccb4654ab0d3560e8c993e',
+              '53ccb4654ab0d3560e8c9924',
+              '53ccb4644ab0d3560e8c8817',
+              '53ccb4654ab0d3560e8c993b',
+              '53ccb4654ab0d3560e8c9923',
+              '53ccb4654ab0d3560e8c98f1',
+              '53ccb4654ab0d3560e8c9922',
+              '53ccb4654ab0d3560e8c94e2',
+              '53ccb4654ab0d3560e8c98f0',
+              '53ccb4654ab0d3560e8c94ca',
+              '53ccb4654ab0d3560e8c94c7',
+              '53ccb4654ab0d3560e8c993a',
+              '53ccb4654ab0d3560e8c94e1',
+              '53ccb4654ab0d3560e8c991e',
+              '53ccb4654ab0d3560e8c94e3',
+              '53ccb4654ab0d3560e8c9499',
+              '53ccb4654ab0d3560e8c94c4',
+              '53ccb4654ab0d3560e8c94f4',
+              '53ccb4654ab0d3560e8c94cc',
+              '53ccb4654ab0d3560e8c991a',
+              '53ccb4654ab0d3560e8c94c9',
+              '53ccb4644ab0d3560e8c9304',
+              '53ccb4654ab0d3560e8c991b'
+             ];
+  sourceid := '53ccba414ab0d3560e8d0563';
+  indicatorid := '53ccb3954ab0d3750d8b4a9d';
+MAP
+    cassandra USING (indicatorid, sourceid, dowids) AS dow,
+    cassandra USING (indicatorid, sourceid, itemids) AS components
+  WHERE KEY RANGE BETWEEN CURRENT_DATE -2 YEAR AND CURRENT_DATE + 1 DAYS;
+REDUCE
+  components BY Sum(Iff(components > components[-1, NN], 1, 0));
+  DEFAULT BY First;
+CALC
+  smagain := Sma(components, 120);
+  osc := LINEARREG_SLOPE(smagain, 5);
+PLOT
+  ON PANEL 'first' RATIO 32/18 ROW 1 COLUMN 1
+    Bar(default / Abs(osc))
+      WITH COLOR '#c22727', '#63ad36', Iff(osc <= 0, 0, 1)
+      // WITH WIDTH 1
+      USING
+          ABSCISSA  LABEL 'Time'
+          ORDINATE LABEL 'Slope'
+      LABEL 'Dow Jones Components Oscillator - Slope(5)';
+    Line(default / dow)
+      WITH COLOR '#2576b4'
+      // WITH WIDTH 1
+      USING
+          ABSCISSA  LABEL 'Time'
+          ORDINATE  LABEL 'Price'
+      LABEL 'Dow Jones Index';
+
+  ON PANEL 'second' RATIO 32/9 ROW 2 COLUMN 1
+    Bar(default / components)
+        WITH COLOR '#E2E037'
+        // WITH WIDTH 1
+        USING
+            ABSCISSA  LABEL 'Time'
+            ORDINATE  LABEL 'Gainers'
+        LABEL 'Dow Jones Gainers';
+    Line(default / smagain)
+        WITH COLOR '#c22727', '#63ad36', Iff(smagain <= 15, 0, 1)
+        // WITH WIDTH 1
+        USING
+            ABSCISSA  LABEL 'Time'
+            ORDINATE  LABEL 'Gainers'
+        LABEL 'Dow Jones Gainers - SMA(120)';

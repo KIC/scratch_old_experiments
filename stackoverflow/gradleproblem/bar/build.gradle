@@ -1,0 +1,14 @@
+plugins {
+        // id "com.bmuschko.nexus" version "2.3" // already in classpath
+        id "me.champeau.gradle.antlr4" version "0.1"
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+//apply plugin: 'com.bmuschko.nexus'
+apply from: '../repos.gradle'
+
+dependencies {
+        compile project(':config')
+}
+
